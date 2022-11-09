@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>Activity pointer trailer</title>
+    <style>
+      body {
+        background-color: rgb(24, 24, 24);
+        height: 100vh;
+        /* overflow: hidden; */
+        /* center your stuff */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(10px, 4vw, 100px);
+      }
+      /* https://www.w3schools.com/csSref/css_selectors.php (el > el)*/
+      body:hover > #pointer {
+        opacity: 1;
+      }
+
+      #pointer {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background-color: rgb(236, 236, 236);
+        /* Fixed positioned so it has no effect on elements in normal flow */
+        position: fixed;
+        /* Zero out starting point to (0, 0) top/left corner (🧙‍♂️ JS will change it) */
+        top: 0;
+        left: 0;
+        /* Ensure that it's the 🥞 topmost element in document. */
+        z-index: 9999999;
+        /* Ensure no pointer events so clicks and hovers pass-through underneath. */
+        /* Otherwise our pointer `div` will conflict with other lower/elements. */
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 500ms ease;
+        /* centering icon: */
+        display: grid;
+        place-items: center;
+      }
+      /* If the icon dataset is "remove" keep it 🪄 invisible: */
+      #pointer[data-type="remove"] > #pointer-icon {
+        opacity: 0;
+      }
+      /* Otherwise, make it visible and apply color adjacent to dataset: */
+      #pointer-icon {
+        opacity: 1;
+        font-size: 0.5rem;
+        transition: opacity 0.3s ease;
+      }
+      #pointer[data-type="link"] > #pointer-icon {
+        color: #0f67a2;
+      }
+      #pointer[data-type="media"] > #pointer-icon {
+        margin-left: 2px;
+        color: #3e3b8f;
+      }
+
+      .card {
+        aspect-ratio: 1 / 1.5;
+        width: clamp(120px, 40vmin, 600px);
+        border-radius: 1px;
+        background-position: center 50%;
+        background-size: 100%;
+        opacity: 0.4;
+        filter: blur(1px);
+        transition: background-size, filter, opacity, 0.35s ease;
+      }
+      /* demo interactive area: */
+      .card:hover {
+        background-size: 105%;
+        opacity: 0.85;
+        filter: blur(0px);
+        box-shadow: 0px 0px 18px rgba(121, 121, 121, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="pointer">
+      <!-- an icon here represents the underneath activity -->
+      <i id="pointer-icon"></i>
+    </div>
+    <!-- demo interactive area: -->
+    <div
+      class="card"
+      data-type="link"
+      style="
+        background-image: url(https://images.unsplash.com/photo-1667061504627-b8bbb4c33ad6?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHx0b3BpYy1mZWVkfDEwOXx4SHhZVE1ITGdPY3x8ZW58MHx8fHw%3D&auto=format&fit=crop&w=700&q=60);
+      "
+    ></div>
+    <div
+      class="card"
+      data-type="media"
+      style="
+        background-image: url(https://images.unsplash.com/photo-1667061600134-05fa8e67d6f2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1yZWxhdGVkfDF8fHxlbnwwfHx8fA%3D%3D&auto=format&fit=crop&w=700&q=60);
+      "
+    ></div>
+
+    <script>
+      // Your scripts :)
+      const pointer = document.getElementById("pointer");
+
+      const animatePointer = (e, active) => {
+        // Capture pointer position as it moves in the window:
+        let { clientX, clientY } = e;
+        // Pointer element px (h/w) size:
+        let { offsetWidth, offsetHeight } = pointer;
+        // With above calc we center our pointer by dividing with its offset!
+        let centerX = clientX - offsetWidth / 2;
+        let centerY = clientY - offsetHeight / 2;
+        // ...
+        console.table({
+          "mouse 🐭": { clientX, clientY },
+          "offset 📏": { offsetWidth, offsetHeight },
+          "calc 🧮": { centerX, centerY },
+        });
+        // ...
+        const keyframe = {
+          transform: `
+            translate(${centerX}px,
+            ${centerY}px)
+            scale(${active ? 8 : 1})
+          `,
+        };
+        pointer.animate(keyframe, {
+          duration: 800,
+          // ! forward to retain animation state reached at the end.
+          fill: "forwards",
+        });
+      };
+
+      const setIconClass = (type) => {
+        switch (type) {
+          case "media":
+            return "fa-solid fa-play";
+          case "link":
+            return "fa-solid fa-arrow-up-right";
+          default:
+            return "";
+        }
+      };
+
+      window.onmousemove = (e) => {
+        // Here closest searches up the DOM tree for a given class:
+        const card = e.target.closest(".card");
+        const active = card !== null;
+        const icon = document.getElementById("pointer-icon");
+        // console.log({ card, icon, active });
+        animatePointer(e, active);
+        // Remove icon if card is not `!active` or if proceed to setting icon:
+        if (!active) pointer.dataset.type = "remove";
+        else pointer.dataset.type = card.dataset.type;
+        if (active) icon.className = setIconClass(card.dataset.type);
+      };
+    </script>
+    <script src="https://kit.fontawesome.com/944eb371a4.js"></script>
+  </body>
+</html>
